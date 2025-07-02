@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>طلب الفطار</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        input,
+        button {
+            margin: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>طلب الفطار</h1>
+    <form id="orderForm">
+        <input type="text" id="name" placeholder="اسمك" required />
+        <input type="text" id="item" placeholder="الصنف" required />
+        <input type="number" id="quantity" placeholder="العدد" required />
+        <button type="submit">أضف الطلب</button>
+    </form>
+
+    <h2>الطلبات</h2>
+    <ul id="orderList"></ul>
+
+    <h3 id="summary"></h3>
+
+    <script>
+        const orderForm = document.getElementById('orderForm');
+        const orderList = document.getElementById('orderList');
+        const summary = document.getElementById('summary');
+
+        async function fetchOrders() {
+            const res = await fetch('http://localhost:5000/api/orders');
+            const orders = await res.json();
+            orderList.innerHTML = '';
+            let total = 0;
+
+            orders.forEach(order => {
+                total += order.quantity;
+
+                const li = document.createElement('li');
+                li.textContent = `${order.name} طلب ${order.quantity} ${order.item}`;
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'تعديل';
+                editBtn.onclick = () => editOrder(order);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'حذف';
+                deleteBtn.onclick = () => deleteOrder(order._id);
+
+                li.appendChild(editBtn);
+                li.appendChild(deleteBtn);
+                orderList.appendChild(li);
+            });
+
+            summary.textContent = `إجمالي السندوتشات المطلوبة: ${total}`;
+        }
+
+        orderForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const item = document.getElementById('item').value;
+            const quantity = +document.getElementById('quantity').value;
+
+            await fetch('http://localhost:5000/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, item, quantity })
+            });
+
+            orderForm.reset();
+            fetchOrders();
+        };
+
+        async function deleteOrder(id) {
+            await fetch(`http://localhost:5000/api/orders/${id}`, { method: 'DELETE' });
+            fetchOrders();
+        }
+
+        function editOrder(order) {
+            document.getElementById('name').value = order.name;
+            document.getElementById('item').value = order.item;
+            document.getElementById('quantity').value = order.quantity;
+
+            orderForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('name').value;
+                const item = document.getElementById('item').value;
+                const quantity = +document.getElementById('quantity').value;
+
+                await fetch(`http://localhost:5000/api/orders/${order._id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, item, quantity })
+                });
+
+                orderForm.reset();
+                fetchOrders();
+
+                // Reset the form submit to POST
+                orderForm.onsubmit = defaultSubmit;
+            };
+        }
+
+        const defaultSubmit = orderForm.onsubmit;
+
+        fetchOrders();
+    </script>
+</body>
+
+</html>
