@@ -1,8 +1,8 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const path = require('path');
+const express = require("express");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const path = require("path");
 
 dotenv.config();
 const app = express();
@@ -10,16 +10,27 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
-const orderRoutes = require('./routes/orders');
-app.use('/api/orders', orderRoutes);
+const orderRoutes = require("./routes/orders");
+const userRoutes = require("./routes/users");
+const groupRoutes = require("./routes/groups");
+
+app.use("/api/orders", orderRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/groups", groupRoutes);
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-.then(() => {
-    console.log('MongoDB connected');
-    app.listen(5000, () => console.log('Server running on http://localhost:5000'));
-})
-.catch(err => console.error(err));
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("MongoDB connected");
+    app.listen(5000, () =>
+      console.log("Server running on http://localhost:5000")
+    );
+  })
+  .catch((err) => console.error(err));
